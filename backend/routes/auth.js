@@ -21,10 +21,10 @@ router.post('/register', async (req, res, next) => {
             email,
             password,
             confirmPassword } = req.body;
+        console.log(req.body)
 
 
-
-        if (!(email && password && confirmPassword && email, firstName, lastName)) {
+        if (!(email && password && confirmPassword && email && firstName && lastName)) {
             res.status(400).send({ errors: ["All Fields are required"] });
         }
 
@@ -32,9 +32,9 @@ router.post('/register', async (req, res, next) => {
             res.status(400).send({ errors: [`The password ${password} and confirm password ${confirmPassword} does not macth !`] });
         }
 
-        const existingUser = await User.findOne({ email })
+        const existingUser = await user.findOne({ email })
 
-        console.log("EXIST   " + existingUser)
+        // console.log("EXIST   " + existingUser)
         if (existingUser) {
             return res.status(400).send({ errors: [`The user with email : ${email} already exists`] });
         }
@@ -42,7 +42,7 @@ router.post('/register', async (req, res, next) => {
         // encrypt the password 
 
         const enrcyptedPassword = await brcypt.hash(password, 10);
-        const userDB = await User.create({
+        const userDB = await user.create({
             firstName,
             lastName,
             email: email.toLowerCase(),
@@ -52,7 +52,7 @@ router.post('/register', async (req, res, next) => {
         // creating a token with some expiry time 
 
         const token = jwt.sign({
-            id: userDB._id, email: email.toLowerCase()
+            id: userDB._id, email: email.toLowerCase(), roles: roles
         }, process.env.TOKEN_KEY, { expiresIn: "2h" });
         user.token = token
 
