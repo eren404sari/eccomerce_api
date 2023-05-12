@@ -1,8 +1,9 @@
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const user = require("../model/user");
 require('dotenv').config()
 const { TOKEN_KEY } = process.env
 
-const verfyToken = (req, res, next) => {
+const verfyToken = async (req, res, next) => {
     const token = req.body.token || req.query.token || req.params.token || req.headers["x-access-token"];
     console.log("Token " + token)
     if (!token) {
@@ -10,7 +11,14 @@ const verfyToken = (req, res, next) => {
     }
     try {
         const decoded = jwt.verify(token, process.env.TOKEN_KEY)
+
+        const useFromDB = await user.findOne({ email: decoded.email })
+        if (!useFromDB) {
+            return res.status(403).json({ errors: ["Invalid login found"] });
+        }
+
         req.user = decoded;
+        req.user.roles = useFromDB.roles
     } catch (error) {
         return res.status(401).json({ errors: ["The token is invalid " + error] })
     }
